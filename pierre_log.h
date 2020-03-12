@@ -2,7 +2,7 @@
 #include <sys/time.h>
 
 #define PIERRE_LOG_ENABLED  1
-#define PIERRE_LOG_FILENAME "pierre.log"
+#define PIERRE_LOG_FILENAME "qemu-events.log"
 
 #if PIERRE_LOG_ENABLED != 0
 
