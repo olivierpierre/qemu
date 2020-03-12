@@ -11,6 +11,8 @@
  *
  */
 
+#include "pierre_log.h"
+
 #include "qemu/osdep.h"
 #include "trace.h"
 #include "block/block_int.h"
@@ -43,8 +45,9 @@ static int coroutine_fn stream_populate(BlockBackend *blk,
 {
     assert(bytes < SIZE_MAX);
 
-    return blk_co_preadv(blk, offset, bytes, NULL,
+    int ret = blk_co_preadv(blk, offset, bytes, NULL,
                          BDRV_REQ_COPY_ON_READ | BDRV_REQ_PREFETCH);
+    return ret;
 }
 
 static void stream_abort(Job *job)
@@ -59,6 +62,7 @@ static void stream_abort(Job *job)
 
 static int stream_prepare(Job *job)
 {
+    pl_timing_start();
     StreamBlockJob *s = container_of(job, StreamBlockJob, common.job);
     BlockJob *bjob = &s->common;
     BlockDriverState *bs = blk_bs(bjob->blk);
@@ -81,10 +85,12 @@ static int stream_prepare(Job *job)
         ret = bdrv_change_backing_file(bs, base_id, base_fmt);
         if (local_err) {
             error_report_err(local_err);
+            pl_timing_stop();
             return -EPERM;
         }
     }
 
+    pl_timing_stop();
     return ret;
 }
 
@@ -106,6 +112,8 @@ static void stream_clean(Job *job)
 
 static int coroutine_fn stream_run(Job *job, Error **errp)
 {
+    pl_timing_start();
+
     StreamBlockJob *s = container_of(job, StreamBlockJob, common.job);
     BlockBackend *blk = s->common.blk;
     BlockDriverState *bs = blk_bs(blk);
@@ -119,11 +127,13 @@ static int coroutine_fn stream_run(Job *job, Error **errp)
 
     if (bs == s->bottom) {
         /* Nothing to stream */
+        pl_timing_stop();
         return 0;
     }
 
     len = bdrv_getlength(bs);
     if (len < 0) {
+        pl_timing_stop();
         return len;
     }
     job_progress_set_remaining(&s->common.job, len);
@@ -198,6 +208,7 @@ static int coroutine_fn stream_run(Job *job, Error **errp)
         bdrv_disable_copy_on_read(bs);
     }
 
+    pl_timing_stop();
     /* Do not remove the backing file if an error was there but ignored. */
     return error;
 }
@@ -220,6 +231,8 @@ void stream_start(const char *job_id, BlockDriverState *bs,
                   int creation_flags, int64_t speed,
                   BlockdevOnError on_error, Error **errp)
 {
+    pl_timing_start();
+
     StreamBlockJob *s;
     BlockDriverState *iter;
     bool bs_read_only;
@@ -227,6 +240,7 @@ void stream_start(const char *job_id, BlockDriverState *bs,
     BlockDriverState *bottom = bdrv_find_overlay(bs, base);
 
     if (bdrv_freeze_backing_chain(bs, bottom, errp) < 0) {
+        pl_timing_stop();
         return;
     }
 
@@ -271,6 +285,8 @@ void stream_start(const char *job_id, BlockDriverState *bs,
     s->on_error = on_error;
     trace_stream_start(bs, base, s);
     job_start(&s->common.job);
+
+    pl_timing_stop();
     return;
 
 fail:
@@ -278,4 +294,5 @@ fail:
         bdrv_reopen_set_read_only(bs, true, NULL);
     }
     bdrv_unfreeze_backing_chain(bs, bottom);
+    pl_timing_stop();
 }
