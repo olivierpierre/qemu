@@ -14,6 +14,12 @@ void pierre_log_init(void);
     fflush(pierre_log_fd); \
 }
 
+#define pl_timing_start() struct timeval start, stop, res; \
+    gettimeofday(&start, NULL)
+#define pl_timing_stop() gettimeofday(&stop, NULL); \
+    timersub(&stop, &start, &res); \
+    pierre_log("%s: %ld.%06ld\n", __FUNCTION__, res.tv_sec, res.tv_usec)
+
 #else /* PIERRE_LOG_ENABLED */
 
 #define pierre_log(...)          (void)0
