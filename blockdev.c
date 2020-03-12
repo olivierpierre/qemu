@@ -30,6 +30,8 @@
  * THE SOFTWARE.
  */
 
+#include "pierre_log.h"
+
 #include "qemu/osdep.h"
 #include "sysemu/block-backend.h"
 #include "sysemu/blockdev.h"
@@ -1524,6 +1526,10 @@ static void external_snapshot_prepare(BlkActionState *common,
     int flags = 0;
     QDict *options = NULL;
     Error *local_err = NULL;
+    struct timeval start, stop, res;
+
+    gettimeofday(&start, NULL);
+
     /* Device and node name of the image to generate the snapshot from */
     const char *device;
     const char *node_name;
@@ -1564,11 +1570,19 @@ static void external_snapshot_prepare(BlkActionState *common,
 
     /* start processing */
     if (action_check_completion_mode(common, errp) < 0) {
+        gettimeofday(&stop, NULL);
+        timersub(&stop, &start, &res);
+        pierre_log("external_snapshot_prepare: %ld.%06ld\n", res.tv_sec,
+                res.tv_usec);
         return;
     }
 
     state->old_bs = bdrv_lookup_bs(device, node_name, errp);
     if (!state->old_bs) {
+        gettimeofday(&stop, NULL);
+        timersub(&stop, &start, &res);
+        pierre_log("external_snapshot_prepare: %ld.%06ld\n", res.tv_sec,
+                res.tv_usec);
         return;
     }
 
@@ -1693,10 +1707,18 @@ static void external_snapshot_prepare(BlkActionState *common,
 
 out:
     aio_context_release(aio_context);
+
+    gettimeofday(&stop, NULL);
+    timersub(&stop, &start, &res);
+    pierre_log("external_snapshot_prepare: %ld.%06ld\n", res.tv_sec, res.tv_usec);
+
 }
 
 static void external_snapshot_commit(BlkActionState *common)
 {
+    struct timeval start, stop, res;
+
+    gettimeofday(&start, NULL);
     ExternalSnapshotState *state =
                              DO_UPCAST(ExternalSnapshotState, common, common);
     AioContext *aio_context;
@@ -1712,6 +1734,10 @@ static void external_snapshot_commit(BlkActionState *common)
     }
 
     aio_context_release(aio_context);
+    gettimeofday(&stop, NULL);
+
+    timersub(&stop, &start, &res);
+    pierre_log("external_snapshot_commit: %ld.%06ld\n", res.tv_sec, res.tv_usec);
 }
 
 static void external_snapshot_abort(BlkActionState *common)

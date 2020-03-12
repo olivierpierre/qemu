@@ -22,6 +22,8 @@
  * THE SOFTWARE.
  */
 
+#include "pierre_log.h"
+
 #include "qemu/osdep.h"
 #include "qemu-common.h"
 #include "qemu/units.h"
@@ -2861,6 +2863,8 @@ int main(int argc, char **argv, char **envp)
     char *dir, **dirs;
     BlockdevOptionsQueue bdo_queue = QSIMPLEQ_HEAD_INITIALIZER(bdo_queue);
     QemuPluginList plugin_list = QTAILQ_HEAD_INITIALIZER(plugin_list);
+
+    pierre_log_init();
 
     os_set_line_buffering();
 
