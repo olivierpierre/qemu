@@ -40,7 +40,7 @@ typedef struct StreamBlockJob {
     bool chain_frozen;
 } StreamBlockJob;
 
-static int coroutine_fn stream_populate(BlockBackend *blk,
+static int __attribute__((noinline)) coroutine_fn stream_populate(BlockBackend *blk,
                                         int64_t offset, uint64_t bytes)
 {
     assert(bytes < SIZE_MAX);
