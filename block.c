@@ -5578,6 +5578,7 @@ out:
 
 /**
  * Return TRUE if the media is present
+ * Pierre: this seems to take a lot of time with a long chain
  */
 bool bdrv_is_inserted(BlockDriverState *bs)
 {

@@ -209,6 +209,7 @@ static int coroutine_fn stream_run(Job *job, Error **errp)
     }
 
     pl_timing_stop();
+    printf("Streaming done!\n");
     /* Do not remove the backing file if an error was there but ignored. */
     return error;
 }
