@@ -42,6 +42,7 @@
 #include "qapi/qapi-visit-block-core.h"
 #include "crypto.h"
 #include "block/aio_task.h"
+#include "block/pierre.h"
 
 /*
   Differences with QCOW:
@@ -2150,6 +2151,12 @@ static coroutine_fn int qcow2_co_preadv_task(BlockDriverState *bs,
 {
     BDRVQcow2State *s = bs->opaque;
     int offset_in_cluster = offset_into_cluster(s, offset);
+
+    static int pierre = 0;
+    if(!pierre) {
+        pierre_map(bs);
+        pierre = 1;
+    }
 
     switch (cluster_type) {
     case QCOW2_CLUSTER_ZERO_PLAIN:
