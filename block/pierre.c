@@ -124,6 +124,7 @@ int pierre_map(BlockDriverState *bs) {
             break;
     }
 
+    free(secmap);
     sleep(5);
     return 0;
 }
@@ -133,9 +134,9 @@ int resize_cache(BlockDriverState *bs, int size) {
     struct Qcow2Cache *c = s->l2_table_cache;
 
     printf("Cache size: %d, table size: %d\n", c->size, c->table_size);
+    qcow2_cache_destroy(s->l2_table_cache);
     s-> l2_table_cache = qcow2_cache_create(bs, size,
             DEFAULT_L2_CACHE_ENTRY_SIZE);
-    //qcow2_cache_destroy(s->l2_table_cache);
 
     return 0;
 }
