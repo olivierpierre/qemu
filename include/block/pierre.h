@@ -1,7 +1,8 @@
 #ifndef BLK_PIERRE_H
 #define BLK_PIERRE_H
 
-#define QCOW2_PIERRE    1
+#define PIERRE_BDRV_EJECT   1
+#define PIERRE_MAP          1
 
 int pierre_map(BlockDriverState *bs);
 
