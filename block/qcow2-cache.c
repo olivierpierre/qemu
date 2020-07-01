@@ -79,6 +79,7 @@ static void qcow2_cache_table_release(Qcow2Cache *c, int i, int num_tables)
     size_t offset = QEMU_ALIGN_UP((uintptr_t) t, align) - (uintptr_t) t;
     size_t length = QEMU_ALIGN_DOWN(mem_size - offset, align);
     if (mem_size > offset && length > 0) {
+        printf("DISCARD 0x%lx byte\n", length);
         madvise((uint8_t *) t + offset, length, MADV_DONTNEED);
     }
 #endif

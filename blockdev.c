@@ -30,8 +30,6 @@
  * THE SOFTWARE.
  */
 
-#include "pierre_log.h"
-
 #include "qemu/osdep.h"
 #include "sysemu/block-backend.h"
 #include "sysemu/blockdev.h"
@@ -1526,7 +1524,6 @@ static void external_snapshot_prepare(BlkActionState *common,
     int flags = 0;
     QDict *options = NULL;
     Error *local_err = NULL;
-    pl_timing_start();
 
     /* Device and node name of the image to generate the snapshot from */
     const char *device;
@@ -1568,13 +1565,11 @@ static void external_snapshot_prepare(BlkActionState *common,
 
     /* start processing */
     if (action_check_completion_mode(common, errp) < 0) {
-        pl_timing_stop();
         return;
     }
 
     state->old_bs = bdrv_lookup_bs(device, node_name, errp);
     if (!state->old_bs) {
-        pl_timing_stop();
         return;
     }
 
@@ -1699,14 +1694,10 @@ static void external_snapshot_prepare(BlkActionState *common,
 
 out:
     aio_context_release(aio_context);
-
-   pl_timing_stop(); 
 }
 
 static void external_snapshot_commit(BlkActionState *common)
 {
-    pl_timing_start();
-
     ExternalSnapshotState *state =
                              DO_UPCAST(ExternalSnapshotState, common, common);
     AioContext *aio_context;
@@ -1722,8 +1713,6 @@ static void external_snapshot_commit(BlkActionState *common)
     }
 
     aio_context_release(aio_context);
-
-    pl_timing_stop();
 }
 
 static void external_snapshot_abort(BlkActionState *common)
